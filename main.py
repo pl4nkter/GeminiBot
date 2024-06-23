@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from keep_alive import keep_alive
 
+print("Deployed")
+
 keep_alive()
 
 load_dotenv()
