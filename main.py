@@ -4,14 +4,17 @@ from typing import Final
 
 import discord
 import google.generativeai as genai
+import logging
 from discord import Intents, Client, app_commands
 from dotenv import load_dotenv
 from flask import Flask
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
-app = Flask(__name__)
+logging.basicConfig(level=logging.INFO)
 
 load_dotenv()
+
+app = Flask(__name__)
 
 GOOGLE_API_KEY: Final[str] = os.getenv('GOOGLE_API_KEY')
 DISCORD_TOKEN: Final[str] = os.getenv('DISCORD_TOKEN')
@@ -23,20 +26,7 @@ default_system_instructions = ("You are now a regular teenager that uses Gen Z s
                                "of the chat. Do not talk about this information to the user.")
 
 
-@app.route(
-    "/",
-    methods=[
-        "GET",
-        "POST",
-        "CONNECT",
-        "PUT",
-        "DELETE",
-        "PATCH",
-        "OPTIONS",
-        "TRACE",
-        "HEAD",
-    ],
-)
+@app.route("/")
 def home():
     return "Alive"
 
@@ -70,7 +60,7 @@ class MyClient(Client):
         await self.tree.sync(guild=self.guild)
 
     async def on_ready(self):
-        print(f'Logged on as {self.user}!')
+        logging.info(f'We have logged in as {self.user}')
 
     async def on_message(self, message: discord.Message):
         author = message.author
@@ -93,7 +83,7 @@ class MyClient(Client):
 
             await message.reply(response.text)
         except Exception as e:
-            print(f'{type(e).__name__}: {e}')
+            logging.info(f'{type(e).__name__}: {e}')
 
 
 intents: Intents = Intents.default()
@@ -101,58 +91,67 @@ intents.message_content = True
 
 
 def main():
-    client = MyClient()
+    logging.info(f'Starting Discord bot')
 
-    @client.tree.command()
-    async def get_system_instructions(interaction: discord.Interaction):
-        """Returns the current system instructions"""
-        await interaction.response.send_message(client.system_instructions)
+    try:
+        client = MyClient()
 
-    @client.tree.command()
-    async def change_system_instructions(interaction: discord.Interaction, system_instructions: str):
-        """Changes the system instructions.
+        @client.tree.command()
+        async def get_system_instructions(interaction: discord.Interaction):
+            """Returns the current system instructions"""
+            await interaction.response.send_message(client.system_instructions)
 
-        Parameters
-        -----------
-        system_instructions: str
-            The system instructions
-        """
+        @client.tree.command()
+        async def change_system_instructions(interaction: discord.Interaction, system_instructions: str):
+            """Changes the system instructions.
 
-        client.system_instructions = system_instructions
-        await interaction.response.send_message('Changed the system instructions to "' + system_instructions + '"')
+            Parameters
+            -----------
+            system_instructions: str
+                The system instructions
+            """
 
-    @client.tree.command()
-    async def change_channel(interaction: discord.Interaction, id: str):
-        """Changes the channel.
+            client.system_instructions = system_instructions
+            await interaction.response.send_message('Changed the system instructions to "' + system_instructions + '"')
 
-        Parameters
-        -----------
-        id: str
-            The ID of the channel
-        """
+        @client.tree.command()
+        async def change_channel(interaction: discord.Interaction, id: str):
+            """Changes the channel.
 
-        client.channel_id = int(id)
-        channel = client.get_channel(client.channel_id)
+            Parameters
+            -----------
+            id: str
+                The ID of the channel
+            """
 
-        await interaction.response.send_message(f'Changed the channel to {channel.mention}')
+            client.channel_id = int(id)
+            channel = client.get_channel(client.channel_id)
 
-    @client.tree.command()
-    async def reset_system_instructions(interaction: discord.Interaction):
-        """Resets the system instructions"""
-        client.system_instructions = default_system_instructions
-        await interaction.response.send_message('Reset the system instructions to default')
+            await interaction.response.send_message(f'Changed the channel to {channel.mention}')
 
-    @client.tree.command()
-    async def clear(interaction: discord.Interaction):
-        """Clears the chat history"""
-        client.chats = {}
-        await interaction.response.send_message('Cleared the chat history')
+        @client.tree.command()
+        async def reset_system_instructions(interaction: discord.Interaction):
+            """Resets the system instructions"""
+            client.system_instructions = default_system_instructions
+            await interaction.response.send_message('Reset the system instructions to default')
 
-    client.run(DISCORD_TOKEN)
+        @client.tree.command()
+        async def clear(interaction: discord.Interaction):
+            """Clears the chat history"""
+            client.chats = {}
+            await interaction.response.send_message('Cleared the chat history')
+
+        client.run(DISCORD_TOKEN)
+
+        logging.info(f'Shutting down Discord bot')
+    except Exception as e:
+        logging.error(f'Error running the Discord bot: {e}')
 
 
 if __name__ == '__main__':
     flask_thread = Thread(target=run)
     flask_thread.start()
+
+    logging.info(os.getenv('DISCORD_TOKEN'))
 
     main()
