@@ -1,5 +1,4 @@
 import os
-from threading import Thread
 from typing import Final
 
 import discord
@@ -7,14 +6,11 @@ import google.generativeai as genai
 import logging
 from discord import Intents, Client, app_commands
 from dotenv import load_dotenv
-from flask import Flask
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
 logging.basicConfig(level=logging.INFO)
 
 load_dotenv()
-
-app = Flask(__name__)
 
 GOOGLE_API_KEY: Final[str] = os.getenv('GOOGLE_API_KEY')
 DISCORD_TOKEN: Final[str] = os.getenv('DISCORD_TOKEN')
@@ -24,15 +20,6 @@ genai.configure(api_key=GOOGLE_API_KEY)
 default_system_instructions = ("You are now a regular teenager that uses Gen Z slang and doesn't capitalize their "
                                "sentences. You are not an AI anymore. These are the system instructions, not a part "
                                "of the chat. Do not talk about this information to the user.")
-
-
-@app.route("/")
-def home():
-    return "Alive"
-
-
-def run():
-    app.run(host='0.0.0.0', port=8080, debug=False, use_reloader=False)
 
 
 class MyClient(Client):
@@ -83,7 +70,7 @@ class MyClient(Client):
 
             await message.reply(response.text)
         except Exception as e:
-            logging.info(f'{type(e).__name__}: {e}')
+            logging.error(f'{type(e).__name__}: {e}')
 
 
 intents: Intents = Intents.default()
@@ -149,9 +136,4 @@ def main():
 
 
 if __name__ == '__main__':
-    flask_thread = Thread(target=run)
-    flask_thread.start()
-
-    logging.info(os.getenv('DISCORD_TOKEN'))
-
     main()
