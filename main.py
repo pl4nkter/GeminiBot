@@ -96,12 +96,12 @@ def main():
     try:
         client = MyClient()
 
-        @client.tree.command(name="get system instructions")
+        @client.tree.command()
         async def get_system_instructions(interaction: discord.Interaction):
             """Returns the current system instructions"""
             await interaction.response.send_message(client.system_instructions)
 
-        @client.tree.command(name="change system instructions")
+        @client.tree.command()
         async def change_system_instructions(interaction: discord.Interaction, system_instructions: str):
             """Changes the system instructions.
 
@@ -114,7 +114,7 @@ def main():
             client.system_instructions = system_instructions
             await interaction.response.send_message('Changed the system instructions to "' + system_instructions + '"')
 
-        @client.tree.command(name="change channel")
+        @client.tree.command()
         async def change_channel(interaction: discord.Interaction, id: str):
             """Changes the channel.
 
@@ -129,13 +129,13 @@ def main():
 
             await interaction.response.send_message(f'Changed the channel to {channel.mention}')
 
-        @client.tree.command(name="reset system instructions")
+        @client.tree.command()
         async def reset_system_instructions(interaction: discord.Interaction):
             """Resets the system instructions"""
             client.system_instructions = default_system_instructions
             await interaction.response.send_message(f'Reset the system instructions to {default_system_instructions}')
 
-        @client.tree.command(name="clear")
+        @client.tree.command()
         async def clear(interaction: discord.Interaction):
             """Clears the chat history"""
             client.chats = {}
